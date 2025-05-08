@@ -1,29 +1,19 @@
-from flask import current_app
 import pytesseract
-from PIL import Image
-import os
+import cv2
 
-def perform_ocr(image_path):
-    if not os.path.exists(image_path):
-        raise FileNotFoundError(f"The image at {image_path} does not exist.")
-    
-    # Load the image from the specified path
-    image = Image.open(image_path)
-    
-    # Use pytesseract to perform OCR on the image
-    text = pytesseract.image_to_string(image)
-    
-    return text
+def extract_text_from_image(image_path):
+    try:
+        # Load image using OpenCV
+        image = cv2.imread(image_path)
 
-def save_uploaded_file(file):
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        return file_path
-    else:
-        raise ValueError("Invalid file type. Only images are allowed.")
+        # Preprocess for better OCR accuracy
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-def allowed_file(filename):
-    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+        # OCR with pytesseract
+        text = pytesseract.image_to_string(thresh)
+
+        return text.strip()
+    except Exception as e:
+        print(f"OCR error: {e}")
+        return ""
