@@ -1,21 +1,18 @@
-class Cart:
-    def __init__(self, id, user_id):
-        self.id = id
-        self.user_id = user_id
-        self.items = []  # List to hold items in the cart
+from app import db
 
-    def add_item(self, item):
-        self.items.append(item)
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
 
-    def remove_item(self, item):
-        if item in self.items:
-            self.items.remove(item)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    medicine_id = db.Column(db.Integer, db.ForeignKey('medicines.id'), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    added_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    def clear_cart(self):
-        self.items.clear()
-
-    def get_items(self):
-        return self.items
-
-    def total_items(self):
-        return len(self.items)
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "medicine_id": self.medicine_id,
+            "quantity": self.quantity
+        }

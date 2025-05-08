@@ -1,28 +1,27 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    def __repr__(self):
-        return f'<User {self.username}>'
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    @staticmethod
-    def create_user(username, password):
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
-    @staticmethod
-    def get_user_by_id(user_id):
-        return User.query.get(user_id)
-
-    @staticmethod
-    def get_user_by_username(username):
-        return User.query.filter_by(username=username).first()
+    def serialize(self):
+        return {
+            "id": self.id,
+            "full_name": self.full_name,
+            "email": self.email,
+            "phone": self.phone,
+            "created_at": self.created_at.isoformat()
+        }

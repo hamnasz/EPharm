@@ -1,39 +1,41 @@
 from flask import Blueprint, request, jsonify
+from app import db
 from app.models.user import User
-from app.utils.jwt_handler import create_jwt
+from app.utils.jwt_handler import generate_token
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
-def register():
+@auth_bp.route('/signup', methods=['POST'])
+def signup():
     data = request.get_json()
-    username = data.get('username')
+    full_name = data.get('full_name')
+    email = data.get('email')
     password = data.get('password')
+    phone = data.get('phone')
 
-    if not username or not password:
-        return jsonify({'message': 'Username and password are required'}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({"message": "User already exists"}), 400
 
-    new_user = User(username=username)
-    new_user.set_password(password)
-    new_user.save()
+    user = User(full_name=full_name, email=email, phone=phone)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    return jsonify({"message": "User created successfully"}), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data.get('username')
+    email = data.get('email')
     password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
-
+    user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
-        token = create_jwt(user.id)
-        return jsonify({'token': token}), 200
+        token = generate_token(user.id)
+        return jsonify({
+            "message": "Login successful",
+            "token": token,
+            "user": user.serialize()
+        })
 
-    return jsonify({'message': 'Invalid username or password'}), 401
-
-@auth_bp.route('/logout', methods=['POST'])
-def logout():
-    # Implement logout functionality if needed
-    return jsonify({'message': 'User logged out successfully'}), 200
+    return jsonify({"message": "Invalid email or password"}), 401

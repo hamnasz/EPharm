@@ -1,6 +1,6 @@
+import os
+
 class Config:
-    SECRET_KEY = 'your_secret_key_here'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'  # Example for SQLite, change as needed
+    SECRET_KEY = os.getenv("SECRET_KEY", "default_secret")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///epharma.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = 'uploads/'
-    INVOICE_FOLDER = 'invoices/'

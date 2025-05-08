@@ -1,19 +1,22 @@
-class Medicine:
-    def __init__(self, id, name, dosage):
-        self.id = id
-        self.name = name
-        self.dosage = dosage
+from app import db
 
-    def __repr__(self):
-        return f"<Medicine {self.name}, Dosage: {self.dosage}>"
+class Medicine(db.Model):
+    __tablename__ = 'medicines'
 
-    # Additional methods for medicine-related operations can be added here
-    def update_dosage(self, new_dosage):
-        self.dosage = new_dosage
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    manufacturer = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    def to_dict(self):
+    def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "dosage": self.dosage
+            "manufacturer": self.manufacturer,
+            "description": self.description,
+            "price": self.price,
+            "stock": self.stock
         }

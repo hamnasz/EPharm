@@ -1,28 +1,27 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from dotenv import load_dotenv
+import os
+
+db = SQLAlchemy()
 
 def create_app():
+    load_dotenv()
     app = Flask(__name__)
-    
-    # Load configuration from config.py
+    CORS(app)
+
     app.config.from_object('app.config.Config')
 
-    # Initialize blueprints (routes)
+    db.init_app(app)
+
+    # Import blueprints
     from app.routes.auth_routes import auth_bp
     from app.routes.medicine_routes import medicine_bp
-    from app.routes.cart_routes import cart_bp
-    from app.routes.ocr_routes import ocr_bp
-    from app.routes.gps_routes import gps_bp
-    from app.routes.chatbot_routes import chatbot_bp
-    from app.routes.invoice_routes import invoice_bp
+    # Add other routes here as needed
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(medicine_bp)
-    app.register_blueprint(cart_bp)
-    app.register_blueprint(ocr_bp)
-    app.register_blueprint(gps_bp)
-    app.register_blueprint(chatbot_bp)
-    app.register_blueprint(invoice_bp)
+    # Register blueprints
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(medicine_bp, url_prefix='/api/medicines')
 
     return app
-
-app = create_app()

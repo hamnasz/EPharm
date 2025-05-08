@@ -1,22 +1,31 @@
-from flask import jwt, current_app
+import jwt
 import datetime
+import os
+from flask import request
 
-def encode_jwt(user_id):
+SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
+EXPIRY_HOURS = 24
+
+def generate_token(user_id):
     payload = {
-        'sub': user_id,
-        'iat': datetime.datetime.utcnow(),
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)  # Token expires in 1 day
+        'user_id': user_id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=EXPIRY_HOURS)
     }
-    return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    return token
 
-def decode_jwt(token):
+def decode_token(token):
     try:
-        payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        return payload['sub']
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
     except jwt.ExpiredSignatureError:
-        return None  # Token has expired
+        return None
     except jwt.InvalidTokenError:
-        return None  # Invalid token
+        return None
 
-def is_token_valid(token):
-    return decode_jwt(token) is not None
+def get_user_from_request():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    return decode_token(token)
